@@ -1,12 +1,34 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import Navbar from './components/Navbar';
 import Hero from './components/Hero';
 import Section from './components/Section';
 import ProjectCard from './components/ProjectCard';
+import ProjectModal from './components/ProjectModal';
+import NoteCard from './components/NoteCard';
+import NoteModal from './components/NoteModal';
+import ContactForm from './components/ContactForm';
+import {
+  noteCategories,
+  notes,
+  profile,
+  projectFilters,
+  projects,
+  services,
+  techStack,
+  timeline,
+  values
+} from './data/siteData';
 
 function App() {
   const cursorRef = useRef(null);
   const ringRef = useRef(null);
+  const [projectFilter, setProjectFilter] = useState('All');
+  const [projectSearch, setProjectSearch] = useState('');
+  const [noteFilter, setNoteFilter] = useState('All');
+  const [noteSearch, setNoteSearch] = useState('');
+  const [selectedProject, setSelectedProject] = useState(null);
+  const [selectedNote, setSelectedNote] = useState(null);
+  const [showTop, setShowTop] = useState(false);
 
   useEffect(() => {
     let rafId = 0;
@@ -59,140 +81,244 @@ function App() {
     };
   }, []);
 
-  const projects = [
-    {
-      title: "NEURAL NETWORK VISUALIZER",
-      description: "Real-time 3D visualization of neural node activations using Three.js and WebGL.",
-      tags: ["React", "Three.js", "TensorFlow"],
-      image: "https://images.unsplash.com/photo-1526378722484-bd91ca387e72?auto=format&fit=crop&w=1200&q=80",
-    },
-    {
-      title: "CRYPTO SENTIMENT ENGINE",
-      description: "AI-powered analysis of social media trends for predictive market movements.",
-      tags: ["Python", "OpenAI", "Next.js"],
-      image: "https://images.unsplash.com/photo-1520607162513-77705c0f0d4a?auto=format&fit=crop&w=1200&q=80",
-    },
-    {
-      title: "QUANTUM CHAT PROTOCOL",
-      description: "End-to-end encrypted messaging system with post-quantum security algorithms.",
-      tags: ["Rust", "WebAssembly", "WebRTC"],
-      image: "https://images.unsplash.com/photo-1518770660439-4636190af475?auto=format&fit=crop&w=1200&q=80",
-    },
-     {
-      title: "ulife",
-      description: "End-to-end encrypted messaging system with post-quantum security algorithms.",
-      tags: ["Javascript", "WebAssembly", "WebRTC"],
-      image: "https://images.unsplash.com/photo-1498050108023-c5249f4df085?auto=format&fit=crop&w=1200&q=80",
-    }
-  
-  ];
+  useEffect(() => {
+    const onScroll = () => setShowTop(window.scrollY > 600);
+    onScroll();
+    window.addEventListener('scroll', onScroll);
+    return () => window.removeEventListener('scroll', onScroll);
+  }, []);
 
-  const modules = [
-    {
-      title: "Immersive shit Interfaces",
-      description: "Layered motion systems, custom interactions, and cinematic navigation for bold brands.",
-      meta: "UI/UX + Motion",
-    },
-    {
-      title: "Realtime Systems",
-      description: "High-performance pipelines engineered for streaming data and collaborative experiences.",
-      meta: "Infra + WebRTC",
-    },
-    {
-      title: "Intelligent Layers",
-      description: "Agent workflows, data-driven personalization, and adaptive experiences at scale.",
-      meta: "AI + Automation",
-    },
-  ];
+  const filteredProjects = useMemo(() => {
+    return projects.filter((project) => {
+      const matchesSearch = `${project.title} ${project.description}`.toLowerCase().includes(projectSearch.toLowerCase());
+      const matchesFilter =
+        projectFilter === 'All' ||
+        project.category === projectFilter ||
+        project.tags.some((tag) => tag.toLowerCase() === projectFilter.toLowerCase());
+      return matchesSearch && matchesFilter;
+    });
+  }, [projectFilter, projectSearch]);
 
-  const signals = ["SYNTH", "LATENCY", "RENDER", "VECTOR", "PROTOCOL", "NEURAL", "STREAM"];
+  const filteredNotes = useMemo(() => {
+    return notes.filter((note) => {
+      const matchesSearch = `${note.title} ${note.tags.join(' ')}`.toLowerCase().includes(noteSearch.toLowerCase());
+      const matchesFilter = noteFilter === 'All' || note.category === noteFilter;
+      return matchesSearch && matchesFilter;
+    });
+  }, [noteFilter, noteSearch]);
 
   return (
     <div className="bg-bg-dark text-white font-sans selection:bg-brand selection:text-bg-dark relative">
       <Navbar />
-      
+
       <main>
         <Hero />
 
-        <div className="marquee">
-          <div className="marquee-track py-4 text-xs font-mono uppercase text-white/60">
-            {signals.concat(signals).map((signal, idx) => (
-              <span key={`${signal}-${idx}`} className="chip">{signal}</span>
-            ))}
-          </div>
-        </div>
-        
-        <Section id="projects" title="Selected Works" kicker="Portfolio">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {projects.map((project, idx) => (
-              <ProjectCard key={idx} {...project} />
-            ))}
-          </div>
-        </Section>
-
-        <Section id="about" title="About Subroutine" kicker="Origin">
-          <div className="grid md:grid-cols-2 gap-12 items-center">
+        <Section
+          id="about"
+          title="About Gideon"
+          kicker="Origin"
+          subtitle="Igiehon Gideon Aisosa is a web developer based in Benin City, Edo State, Nigeria, and a student of the University of Benin. He builds responsive, clean, user-friendly websites and full-stack applications using modern technologies such as React, Next.js, React Native, Node.js, PostgreSQL, HTML, CSS, and JavaScript."
+        >
+          <div className="grid lg:grid-cols-[1.1fr_0.9fr] gap-10">
             <div className="space-y-6 text-white/70">
               <p>
-                My mission is to merge complex technical architecture with intuitive, 
-                high-fidelity user interfaces. I believe the future of the web is immersive, 
-                performant, and visually striking.
+                Gideon focuses on helping brands, small businesses, startups, and creators build a professional online presence
+                that converts visitors into customers.
               </p>
-              <p>
-                With over 5 years of experience in full-stack development, I focus on building 
-                scalable systems that don't compromise on aesthetic quality.
-              </p>
-              <div className="flex gap-4 pt-4">
-                <div className="px-4 py-2 bg-white/5 rounded-full border border-white/10 text-brand font-mono text-sm">
-                  NODE.JS
-                </div>
-                <div className="px-4 py-2 bg-white/5 rounded-full border border-white/10 text-brand font-mono text-sm">
-                  REACT
-                </div>
-                <div className="px-4 py-2 bg-white/5 rounded-full border border-white/10 text-brand font-mono text-sm">
-                  POSTGRES
-                </div>
+              <div className="grid gap-4">
+                {timeline.map((item) => (
+                  <div key={item.title} className="glass p-4">
+                    <div className="text-xs font-mono text-white/40 tracking-[0.3em] mb-2">{item.year}</div>
+                    <div className="text-lg font-semibold text-white">{item.title}</div>
+                    <p className="text-sm text-white/60 mt-2">{item.description}</p>
+                  </div>
+                ))}
               </div>
             </div>
-            <div className="hero-panel p-8 aspect-square flex items-center justify-center relative">
-               <div className="absolute inset-0 bg-brand/5 animate-pulse" />
-               <div className="relative z-10 text-center">
-                  <div className="text-5xl font-black text-brand mb-2">99.9%</div>
-                  <div className="text-xs tracking-[0.3em] font-mono text-white/40 uppercase">Uptime Reliability</div>
-               </div>
+            <div className="space-y-6">
+              <div className="hero-panel p-6">
+                <div className="text-xs font-mono text-white/40 tracking-[0.3em] mb-2">Brand</div>
+                <div className="text-2xl font-bold mb-2">Warrior Tech</div>
+                <p className="text-white/70">
+                  Mission: Build clean, scalable, modern digital products for brands and businesses.
+                </p>
+              </div>
+              <div className="glass p-6">
+                <div className="text-xs font-mono text-white/40 tracking-[0.3em] mb-3">Values</div>
+                <div className="flex flex-wrap gap-2">
+                  {values.map((value) => (
+                    <span key={value} className="badge">
+                      {value}
+                    </span>
+                  ))}
+                </div>
+              </div>
+              <div className="glass p-6">
+                <div className="text-xs font-mono text-white/40 tracking-[0.3em] mb-2">Focus</div>
+                <p className="text-white/70">
+                  Full-stack web developer delivering responsive websites, web apps, landing pages, and e-commerce platforms
+                  for clients in Benin City, UNIBEN, Edo State, and across Nigeria.
+                </p>
+              </div>
             </div>
           </div>
         </Section>
 
-        <Section id="modules" title="System Modules" kicker="Capabilities">
-          <div className="grid md:grid-cols-3 gap-6">
-            {modules.map((module) => (
-              <div key={module.title} className="glass p-6 hover:border-brand/30 transition-colors">
-                <div className="text-xs font-mono text-white/40 tracking-[0.3em] mb-3">{module.meta}</div>
-                <h3 className="text-2xl font-bold mb-3">{module.title}</h3>
-                <p className="text-white/60 text-sm">{module.description}</p>
+        <Section
+          id="projects"
+          title="Projects"
+          kicker="Portfolio"
+          subtitle="Search and filter selected work across web apps, landing pages, e-commerce, and UI/UX concepts."
+        >
+          <div className="flex flex-wrap gap-3 mb-6">
+            {projectFilters.map((filter) => (
+              <button
+                key={filter}
+                onClick={() => setProjectFilter(filter)}
+                className={`chip ${projectFilter === filter ? 'chip-active' : ''}`}
+              >
+                {filter}
+              </button>
+            ))}
+          </div>
+          <div className="flex flex-col md:flex-row gap-4 mb-10">
+            <input
+              value={projectSearch}
+              onChange={(event) => setProjectSearch(event.target.value)}
+              placeholder="Search projects"
+              className="form-input flex-1"
+            />
+            <div className="glass px-5 py-3 text-sm text-white/60">{filteredProjects.length} projects</div>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            {filteredProjects.map((project) => (
+              <ProjectCard
+                key={project.id}
+                {...project}
+                onDetails={() => setSelectedProject(project)}
+              />
+            ))}
+          </div>
+        </Section>
+
+        <Section
+          id="services"
+          title="Services"
+          kicker="Client Work"
+          subtitle="Conversion-focused services designed for brands, businesses, and startups."
+        >
+          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {services.map((service) => (
+              <div key={service.title} className="glass p-6 hover:border-brand/30 transition-colors">
+                <h3 className="text-xl font-bold mb-3">{service.title}</h3>
+                <p className="text-sm text-white/70 mb-4">For: {service.audience}</p>
+                <p className="text-sm text-white/60">You get: {service.outcome}</p>
+                <a href="#contact" className="mt-6 inline-flex text-brand font-semibold">
+                  Request this service
+                </a>
               </div>
             ))}
           </div>
         </Section>
 
-        <Section id="contact" title="Get in Touch" kicker="Contact">
-          <div className="hero-panel p-12 text-center max-w-3xl mx-auto">
-            <h3 className="text-2xl font-bold mb-4">READY TO BUILD THE FUTURE?</h3>
-            <p className="text-white/60 mb-8">Currently accepting new projects and collaborations.</p>
-            <a 
-              href="mailto:hello@example.com" 
-              className="inline-block px-12 py-4 btn-primary font-black tracking-widest hover:scale-105 transition-transform"
-            >
-              INITIALIZE CONTACT
-            </a>
+        <Section
+          id="tech"
+          title="Tech Stack"
+          kicker="Capabilities"
+          subtitle="Modern tooling across frontend, backend, mobile, and deployment."
+        >
+          <div className="grid md:grid-cols-2 gap-6">
+            {techStack.map((group) => (
+              <div key={group.group} className="glass p-6">
+                <div className="text-xs font-mono text-white/40 tracking-[0.3em] mb-3">{group.group}</div>
+                <div className="flex flex-wrap gap-2">
+                  {group.items.map((item) => (
+                    <span key={item} className="badge" title={item}>
+                      {item}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            ))}
+          </div>
+        </Section>
+
+        <Section
+          id="notes"
+          title="Notes & Blog"
+          kicker="Insights"
+          subtitle="Developer notes, learning journey, and guides for businesses and student developers."
+        >
+          <div className="flex flex-wrap gap-3 mb-6">
+            {noteCategories.map((category) => (
+              <button
+                key={category}
+                onClick={() => setNoteFilter(category)}
+                className={`chip ${noteFilter === category ? 'chip-active' : ''}`}
+              >
+                {category}
+              </button>
+            ))}
+          </div>
+          <div className="flex flex-col md:flex-row gap-4 mb-10">
+            <input
+              value={noteSearch}
+              onChange={(event) => setNoteSearch(event.target.value)}
+              placeholder="Search notes"
+              className="form-input flex-1"
+            />
+            <div className="glass px-5 py-3 text-sm text-white/60">{filteredNotes.length} notes</div>
+          </div>
+          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {filteredNotes.map((note) => (
+              <NoteCard key={note.id} note={note} onOpen={() => setSelectedNote(note)} />
+            ))}
+          </div>
+        </Section>
+
+        <Section
+          id="contact"
+          title="Contact"
+          kicker="Get in touch"
+          subtitle="Tell Gideon about your project, timeline, and budget."
+        >
+          <div className="grid lg:grid-cols-[1fr_0.8fr] gap-10">
+            <div className="hero-panel p-6">
+              <h3 className="text-2xl font-bold mb-4">Let's build something powerful.</h3>
+              <p className="text-white/70 mb-6">
+                {profile.publicName} is open to freelance work, internships, remote roles, and collaborations.
+              </p>
+              <div className="space-y-3 text-sm text-white/60">
+                <div>Location: {profile.location}</div>
+                <div>Email: {profile.email}</div>
+                <div>Brand: {profile.handle}</div>
+              </div>
+            </div>
+            <div className="glass p-6">
+              <ContactForm />
+            </div>
           </div>
         </Section>
       </main>
 
-      <footer className="py-12 border-t border-white/5 text-center text-white/30 font-mono text-xs">
-        <p>© 2024 PORTFOLIO.SYS // ALL RIGHTS RESERVED // MADE WITH ❤️ AND CYBERNETICS</p>
+      <footer className="py-12 border-t border-white/5 text-center text-white/40 font-mono text-xs">
+        <p>© 2026 {profile.fullName} · Warrior Tech · Built for premium web experiences.</p>
       </footer>
+
+      {showTop && (
+        <button
+          type="button"
+          className="back-to-top"
+          onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+          aria-label="Back to top"
+        >
+          ↑
+        </button>
+      )}
+
+      <ProjectModal project={selectedProject} onClose={() => setSelectedProject(null)} />
+      <NoteModal note={selectedNote} onClose={() => setSelectedNote(null)} />
 
       <div ref={ringRef} className="cursor-ring" aria-hidden="true" />
       <div ref={cursorRef} className="cursor-orb" aria-hidden="true" />

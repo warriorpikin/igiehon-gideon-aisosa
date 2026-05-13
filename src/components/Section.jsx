@@ -1,6 +1,6 @@
 import { motion } from 'framer-motion';
 
-export default function Section({ children, id, title, kicker }) {
+export default function Section({ children, id, title, kicker, subtitle }) {
   return (
     <section id={id} className="py-24 px-6 max-w-7xl mx-auto">
       <motion.div
@@ -18,6 +18,7 @@ export default function Section({ children, id, title, kicker }) {
             )}
             <h2 className="text-3xl md:text-5xl font-bold tracking-tighter mb-4 uppercase">{title}</h2>
             <div className="h-1 w-20 bg-brand rounded-full" />
+            {subtitle && <p className="text-white/60 mt-4 max-w-2xl">{subtitle}</p>}
           </div>
         )}
         {children}
