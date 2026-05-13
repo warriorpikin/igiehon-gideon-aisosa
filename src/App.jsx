@@ -89,7 +89,7 @@ function App() {
 
   const modules = [
     {
-      title: "Immersive Interfaces",
+      title: "Immersive shit Interfaces",
       description: "Layered motion systems, custom interactions, and cinematic navigation for bold brands.",
       meta: "UI/UX + Motion",
     },
