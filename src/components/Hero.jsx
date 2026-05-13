@@ -17,7 +17,7 @@ export default function Hero() {
   }, []);
 
   return (
-    <section id="home" className="min-h-screen flex items-center px-6 py-24 relative overflow-hidden">
+    <section id="home" className="min-h-screen flex items-center px-6 pt-36 pb-24 relative overflow-hidden">
       <motion.div
         initial={{ opacity: 0, y: 40 }}
         animate={{ opacity: 1, y: 0 }}
@@ -26,10 +26,10 @@ export default function Hero() {
       >
         <div className="text-left">
           <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full border border-brand/30 bg-brand/10 text-brand text-xs font-mono mb-6">
-            <Sparkles size={14} /> {profile.handle}
+            <Sparkles size={19} /> {profile.handle}
           </div>
           <h1 className="text-5xl md:text-7xl font-black mb-6 tracking-tight leading-[1.02]">
-            {profile.publicName}
+           
             <span className="block text-brand text-glow italic">Builds</span>
             High-impact digital products.
           </h1>
