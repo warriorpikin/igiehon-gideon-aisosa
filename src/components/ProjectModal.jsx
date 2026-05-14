@@ -95,7 +95,7 @@ export default function ProjectModal({ project, onClose }) {
                   onClick={onClose}
                   className="btn-ghost px-6 py-3 text-sm font-bold"
                 >
-                  Back to projects
+                  Back to projects..
                 </button>
               </div>
             </div>
