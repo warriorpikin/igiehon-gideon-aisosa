@@ -1,4 +1,4 @@
 User-agent: *
 Allow: /
 
-Sitemap: https://demo-portfolio.pxxl.click/sitemap.xml
+Sitemap: https://igiehon-gideon-aisosa.vercel.app/sitemap.xml
