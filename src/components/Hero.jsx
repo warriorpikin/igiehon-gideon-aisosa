@@ -83,7 +83,7 @@ export default function Hero() {
 
         <div className="hero-panel p-8 md:p-10 relative">
           <div className="absolute top-6 right-6 text-xs font-mono text-white/50">AVAILABLE FOR WORK.</div>
-          <div className="relative z-10 grid gap-6">
+          <div className="relative z-10 grid gap-8 md:gap-6">
             <div className="relative overflow-hidden rounded-2xl border border-white/10">
               <img
                 src={heroImage}
