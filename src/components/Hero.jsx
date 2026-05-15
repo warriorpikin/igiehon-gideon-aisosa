@@ -3,7 +3,7 @@ import { motion } from 'framer-motion';
 import { ArrowRight, Download, Mail, Sparkles } from 'lucide-react';
 import { profile, socials, stats } from '../data/siteData';
 
-const heroImage = '/assets/igiehon-gideon-headshot.jpg';
+const heroImage = '/assets/1000219542.webp';
 
 export default function Hero() {
   const [roleIndex, setRoleIndex] = useState(0);
