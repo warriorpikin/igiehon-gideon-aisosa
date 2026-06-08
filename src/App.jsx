@@ -1,12 +1,13 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
-import Navbar from './components/Navbar';
-import Hero from './components/Hero';
-import Section from './components/Section';
-import ProjectCard from './components/ProjectCard';
-import ProjectModal from './components/ProjectModal';
-import NoteCard from './components/NoteCard';
-import NoteModal from './components/NoteModal';
-import ContactForm from './components/ContactForm';
+import { useEffect, useMemo, useRef, useState } from "react";
+import Navbar from "./components/Navbar";
+import Hero from "./components/Hero";
+import Section from "./components/Section";
+import ProjectCard from "./components/ProjectCard";
+import ProjectModal from "./components/ProjectModal";
+import NoteCard from "./components/NoteCard";
+import NoteModal from "./components/NoteModal";
+import ContactForm from "./components/ContactForm";
+
 import {
   noteCategories,
   notes,
@@ -16,19 +17,29 @@ import {
   services,
   techStack,
   timeline,
-  values
-} from './data/siteData';
+  values,
+} from "./data/siteData";
 
 function App() {
   const cursorRef = useRef(null);
   const ringRef = useRef(null);
-  const [projectFilter, setProjectFilter] = useState('All');
-  const [projectSearch, setProjectSearch] = useState('');
-  const [noteFilter, setNoteFilter] = useState('All');
-  const [noteSearch, setNoteSearch] = useState('');
+
+  const [projectFilter, setProjectFilter] = useState("All");
+  const [projectSearch, setProjectSearch] = useState("");
+  const [noteFilter, setNoteFilter] = useState("All");
+  const [noteSearch, setNoteSearch] = useState("");
   const [selectedProject, setSelectedProject] = useState(null);
   const [selectedNote, setSelectedNote] = useState(null);
   const [showTop, setShowTop] = useState(false);
+  const [theme, setTheme] = useState(() => {
+    return localStorage.getItem("portfolio-theme") || "dark";
+  });
+
+  useEffect(() => {
+    document.documentElement.setAttribute("data-theme", theme);
+    document.documentElement.classList.toggle("dark", theme === "dark");
+    localStorage.setItem("portfolio-theme", theme);
+  }, [theme]);
 
   useEffect(() => {
     let rafId = 0;
@@ -37,22 +48,30 @@ function App() {
     let currentX = targetX;
     let currentY = targetY;
 
+    const isTouchDevice =
+      "ontouchstart" in window || navigator.maxTouchPoints > 0;
+
+    if (isTouchDevice) return undefined;
+
     const handleMove = (event) => {
       targetX = event.clientX;
       targetY = event.clientY;
+
       const dx = targetX - window.innerWidth / 2;
       const dy = targetY - window.innerHeight / 2;
-      document.documentElement.style.setProperty('--cursor-x', `${targetX}px`);
-      document.documentElement.style.setProperty('--cursor-y', `${targetY}px`);
-      document.documentElement.style.setProperty('--cursor-dx', `${dx}px`);
-      document.documentElement.style.setProperty('--cursor-dy', `${dy}px`);
-      if (cursorRef.current) cursorRef.current.style.opacity = '1';
-      if (ringRef.current) ringRef.current.style.opacity = '1';
+
+      document.documentElement.style.setProperty("--cursor-x", `${targetX}px`);
+      document.documentElement.style.setProperty("--cursor-y", `${targetY}px`);
+      document.documentElement.style.setProperty("--cursor-dx", `${dx}px`);
+      document.documentElement.style.setProperty("--cursor-dy", `${dy}px`);
+
+      if (cursorRef.current) cursorRef.current.style.opacity = "1";
+      if (ringRef.current) ringRef.current.style.opacity = "1";
     };
 
     const handleLeave = () => {
-      if (cursorRef.current) cursorRef.current.style.opacity = '0';
-      if (ringRef.current) ringRef.current.style.opacity = '0';
+      if (cursorRef.current) cursorRef.current.style.opacity = "0";
+      if (ringRef.current) ringRef.current.style.opacity = "0";
     };
 
     const animate = () => {
@@ -60,110 +79,125 @@ function App() {
       currentY += (targetY - currentY) * 0.12;
 
       if (cursorRef.current) {
-        cursorRef.current.style.transform = `translate3d(${currentX - 12}px, ${currentY - 12}px, 0)`;
+        cursorRef.current.style.transform = `translate3d(${currentX - 12}px, ${
+          currentY - 12
+        }px, 0)`;
       }
+
       if (ringRef.current) {
-        ringRef.current.style.transform = `translate3d(${currentX - 28}px, ${currentY - 28}px, 0)`;
+        ringRef.current.style.transform = `translate3d(${currentX - 28}px, ${
+          currentY - 28
+        }px, 0)`;
       }
+
       rafId = window.requestAnimationFrame(animate);
     };
 
     animate();
-    window.addEventListener('mousemove', handleMove);
-    window.addEventListener('mouseleave', handleLeave);
-    window.addEventListener('blur', handleLeave);
+
+    window.addEventListener("mousemove", handleMove);
+    window.addEventListener("mouseleave", handleLeave);
+    window.addEventListener("blur", handleLeave);
 
     return () => {
       window.cancelAnimationFrame(rafId);
-      window.removeEventListener('mousemove', handleMove);
-      window.removeEventListener('mouseleave', handleLeave);
-      window.removeEventListener('blur', handleLeave);
+      window.removeEventListener("mousemove", handleMove);
+      window.removeEventListener("mouseleave", handleLeave);
+      window.removeEventListener("blur", handleLeave);
     };
   }, []);
 
   useEffect(() => {
-    const onScroll = () => setShowTop(window.scrollY > 600);
+    const onScroll = () => {
+      setShowTop(window.scrollY > 600);
+    };
+
     onScroll();
-    window.addEventListener('scroll', onScroll);
-    return () => window.removeEventListener('scroll', onScroll);
+
+    window.addEventListener("scroll", onScroll, { passive: true });
+
+    return () => {
+      window.removeEventListener("scroll", onScroll);
+    };
   }, []);
 
   const filteredProjects = useMemo(() => {
     return projects.filter((project) => {
-      const matchesSearch = `${project.title} ${project.description}`.toLowerCase().includes(projectSearch.toLowerCase());
+      const projectTags = project.tags || project.stack || [];
+
+      const searchableText = [
+        project.title,
+        project.description,
+        project.category,
+        project.type,
+        ...projectTags,
+      ]
+        .filter(Boolean)
+        .join(" ")
+        .toLowerCase();
+
+      const matchesSearch = searchableText.includes(
+        projectSearch.trim().toLowerCase()
+      );
+
       const matchesFilter =
-        projectFilter === 'All' ||
+        projectFilter === "All" ||
         project.category === projectFilter ||
-        project.tags.some((tag) => tag.toLowerCase() === projectFilter.toLowerCase());
+        project.type === projectFilter ||
+        projectTags.some(
+          (tag) => tag.toLowerCase() === projectFilter.toLowerCase()
+        );
+
       return matchesSearch && matchesFilter;
     });
   }, [projectFilter, projectSearch]);
 
   const filteredNotes = useMemo(() => {
     return notes.filter((note) => {
-      const matchesSearch = `${note.title} ${note.tags.join(' ')}`.toLowerCase().includes(noteSearch.toLowerCase());
-      const matchesFilter = noteFilter === 'All' || note.category === noteFilter;
+      const noteTags = note.tags || [];
+
+      const searchableText = [
+        note.title,
+        note.description,
+        note.category,
+        note.tag,
+        ...noteTags,
+      ]
+        .filter(Boolean)
+        .join(" ")
+        .toLowerCase();
+
+      const matchesSearch = searchableText.includes(
+        noteSearch.trim().toLowerCase()
+      );
+
+      const matchesFilter =
+        noteFilter === "All" ||
+        note.category === noteFilter ||
+        note.tag === noteFilter;
+
       return matchesSearch && matchesFilter;
     });
   }, [noteFilter, noteSearch]);
+
+  const toggleTheme = () => {
+    setTheme((currentTheme) => (currentTheme === "dark" ? "light" : "dark"));
+  };
 
   return (
     <div className="bg-bg-dark text-white font-sans selection:bg-brand selection:text-bg-dark relative">
       <Navbar />
 
+      <button
+        type="button"
+        onClick={toggleTheme}
+        className="fixed right-6 top-24 z-50 rounded-full border border-white/10 bg-white/10 px-4 py-2 text-xs font-bold uppercase tracking-[0.2em] text-white backdrop-blur"
+      >
+        {theme === "dark" ? "Light" : "Dark"}
+      </button>
+
       <main>
         <Hero />
-
-        <Section
-          id="about"
-          title="About Gideon"
-          kicker="Origin"
-          subtitle="Igiehon Gideon Aisosa is a web developer based in Benin City, Edo State, Nigeria, and a student of the University of Benin. He builds responsive, clean, user-friendly websites and full-stack applications using modern technologies such as React, Next.js, React Native, Node.js, PostgreSQL, HTML, CSS, and JavaScript."
-        >
-          <div className="grid lg:grid-cols-[1.1fr_0.9fr] gap-10">
-            <div className="space-y-6 text-white/70">
-              <p>
-                Gideon focuses on helping brands, small businesses, startups, and creators build a professional online presence
-                that converts visitors into customers.
-              </p>
-              <div className="grid gap-4">
-                {timeline.map((item) => (
-                  <div key={item.title} className="glass p-4">
-                    <div className="text-xs font-mono text-white/40 tracking-[0.3em] mb-2">{item.year}</div>
-                    <div className="text-lg font-semibold text-white">{item.title}</div>
-                    <p className="text-sm text-white/60 mt-2">{item.description}</p>
-                  </div>
-                ))}
-              </div>
-            </div>
-            <div className="space-y-6">
-              <div className="hero-panel p-6">
-                <div className="text-xs font-mono text-white/40 tracking-[0.3em] mb-2">Brand</div>
-                <div className="text-2xl font-bold mb-2">Warrior Tech</div>
-                <p className="text-white/70">
-                  Mission: Build clean, scalable, modern digital products for brands and businesses.
-                </p>
-              </div>
-              <div className="glass p-6">
-                <div className="text-xs font-mono text-white/40 tracking-[0.3em] mb-3">Values</div>
-                <div className="flex flex-wrap gap-2">
-                  {values.map((value) => (
-                    <span key={value} className="badge">
-                      {value}
-                    </span>
-                  ))}
-                </div>
-              </div>
-              <div className="glass p-6">
-                <div className="text-xs font-mono text-white/40 tracking-[0.3em] mb-2">Focus</div>
-                <p className="text-white/70">
-                  Full-stack web developer delivering responsive websites, web apps, landing pages, and e-commerce platforms
-                  for clients in Benin City, UNIBEN, Edo State, and across Nigeria.
-                </p>
-              </div>
-            </div>
-          </div>
-        </Section>
 
         <Section
           id="projects"
@@ -176,12 +210,13 @@ function App() {
               <button
                 key={filter}
                 onClick={() => setProjectFilter(filter)}
-                className={`chip ${projectFilter === filter ? 'chip-active' : ''}`}
+                className={`chip ${projectFilter === filter ? "chip-active" : ""}`}
               >
                 {filter}
               </button>
             ))}
           </div>
+
           <div className="flex flex-col md:flex-row gap-4 mb-10">
             <input
               value={projectSearch}
@@ -189,8 +224,12 @@ function App() {
               placeholder="Search projects"
               className="form-input flex-1"
             />
-            <div className="glass px-5 py-3 text-sm text-white/60">{filteredProjects.length} projects</div>
+
+            <div className="glass px-5 py-3 text-sm text-white/60">
+              {filteredProjects.length} projects
+            </div>
           </div>
+
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
             {filteredProjects.map((project) => (
               <ProjectCard
@@ -203,6 +242,86 @@ function App() {
         </Section>
 
         <Section
+          id="about"
+          title="About Gideon"
+          kicker="Origin"
+          subtitle="Igiehon Gideon Aisosa is a full-stack web developer focused on building polished interfaces, scalable systems, and professional digital products."
+        >
+          <div className="grid lg:grid-cols-[1.1fr_0.9fr] gap-10">
+            <div className="space-y-6 text-white/70">
+              <p>
+                Gideon builds responsive websites, full-stack applications,
+                landing pages, e-commerce systems, and product interfaces using
+                tools like React, Next.js, Node.js, Express, PostgreSQL, and
+                modern frontend animation systems.
+              </p>
+
+              <p>
+                His work is focused on clean UI, strong performance, thoughtful
+                user experience, and digital products that help brands,
+                startups, creators, and businesses look more professional
+                online.
+              </p>
+
+              <div className="grid gap-4">
+                {timeline.map((item) => (
+                  <div key={item.title} className="glass p-4">
+                    <div className="text-xs font-mono text-white/40 tracking-[0.3em] mb-2">
+                      {item.year}
+                    </div>
+                    <div className="text-lg font-semibold text-white">
+                      {item.title}
+                    </div>
+                    <p className="text-sm text-white/60 mt-2">
+                      {item.description}
+                    </p>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <div className="space-y-6">
+              <div className="hero-panel p-6">
+                <div className="text-xs font-mono text-white/40 tracking-[0.3em] mb-2">
+                  Profile
+                </div>
+                <div className="text-2xl font-bold mb-2">
+                  {profile.publicName || profile.fullName}
+                </div>
+                <p className="text-white/70">
+                  Full-stack web developer building modern websites, dashboards,
+                  apps, and e-commerce platforms.
+                </p>
+              </div>
+
+              <div className="glass p-6">
+                <div className="text-xs font-mono text-white/40 tracking-[0.3em] mb-3">
+                  Values
+                </div>
+                <div className="flex flex-wrap gap-2">
+                  {values.map((value) => (
+                    <span key={value} className="badge">
+                      {value}
+                    </span>
+                  ))}
+                </div>
+              </div>
+
+              <div className="glass p-6">
+                <div className="text-xs font-mono text-white/40 tracking-[0.3em] mb-2">
+                  Focus
+                </div>
+                <p className="text-white/70">
+                  React, Next.js, Node.js, Express, PostgreSQL, UI engineering,
+                  landing pages, e-commerce, and product-focused frontend
+                  development.
+                </p>
+              </div>
+            </div>
+          </div>
+        </Section>
+
+        <Section
           id="services"
           title="Services"
           kicker="Client Work"
@@ -210,10 +329,30 @@ function App() {
         >
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
             {services.map((service) => (
-              <div key={service.title} className="glass p-6 hover:border-brand/30 transition-colors">
+              <div
+                key={service.title}
+                className="glass p-6 hover:border-brand/30 transition-colors"
+              >
                 <h3 className="text-xl font-bold mb-3">{service.title}</h3>
-                <p className="text-sm text-white/70 mb-4">For: {service.audience}</p>
-                <p className="text-sm text-white/60">You get: {service.outcome}</p>
+
+                {service.description && (
+                  <p className="text-sm text-white/70 mb-4">
+                    {service.description}
+                  </p>
+                )}
+
+                {service.audience && (
+                  <p className="text-sm text-white/70 mb-4">
+                    For: {service.audience}
+                  </p>
+                )}
+
+                {service.outcome && (
+                  <p className="text-sm text-white/60">
+                    You get: {service.outcome}
+                  </p>
+                )}
+
                 <a href="#contact" className="mt-6 inline-flex text-brand font-semibold">
                   Request this service
                 </a>
@@ -231,7 +370,10 @@ function App() {
           <div className="grid md:grid-cols-2 gap-6">
             {techStack.map((group) => (
               <div key={group.group} className="glass p-6">
-                <div className="text-xs font-mono text-white/40 tracking-[0.3em] mb-3">{group.group}</div>
+                <div className="text-xs font-mono text-white/40 tracking-[0.3em] mb-3">
+                  {group.group}
+                </div>
+
                 <div className="flex flex-wrap gap-2">
                   {group.items.map((item) => (
                     <span key={item} className="badge" title={item}>
@@ -255,12 +397,13 @@ function App() {
               <button
                 key={category}
                 onClick={() => setNoteFilter(category)}
-                className={`chip ${noteFilter === category ? 'chip-active' : ''}`}
+                className={`chip ${noteFilter === category ? "chip-active" : ""}`}
               >
                 {category}
               </button>
             ))}
           </div>
+
           <div className="flex flex-col md:flex-row gap-4 mb-10">
             <input
               value={noteSearch}
@@ -268,11 +411,19 @@ function App() {
               placeholder="Search notes"
               className="form-input flex-1"
             />
-            <div className="glass px-5 py-3 text-sm text-white/60">{filteredNotes.length} notes</div>
+
+            <div className="glass px-5 py-3 text-sm text-white/60">
+              {filteredNotes.length} notes
+            </div>
           </div>
+
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
             {filteredNotes.map((note) => (
-              <NoteCard key={note.id} note={note} onOpen={() => setSelectedNote(note)} />
+              <NoteCard
+                key={note.id}
+                note={note}
+                onOpen={() => setSelectedNote(note)}
+              />
             ))}
           </div>
         </Section>
@@ -285,16 +436,22 @@ function App() {
         >
           <div className="grid lg:grid-cols-[1fr_0.8fr] gap-10">
             <div className="hero-panel p-6">
-              <h3 className="text-2xl font-bold mb-4">Let's build something powerful.</h3>
+              <h3 className="text-2xl font-bold mb-4">
+                Let&apos;s build something powerful.
+              </h3>
+
               <p className="text-white/70 mb-6">
-                {profile.publicName} is open to freelance work, internships, remote roles, and collaborations.
+                {profile.publicName || profile.fullName} is open to freelance
+                work, internships, remote roles, and collaborations.
               </p>
+
               <div className="space-y-3 text-sm text-white/60">
                 <div>Location: {profile.location}</div>
                 <div>Email: {profile.email}</div>
                 <div>Brand: {profile.handle}</div>
               </div>
             </div>
+
             <div className="glass p-6">
               <ContactForm />
             </div>
@@ -303,21 +460,28 @@ function App() {
       </main>
 
       <footer className="py-12 border-t border-white/5 text-center text-white/40 font-mono text-xs">
-        <p>© 2026 {profile.fullName} · Warrior Tech · Built for premium web experiences.</p>
+        <p>
+          © 2026 {profile.fullName} · Warrior Tech · Built for premium web
+          experiences.
+        </p>
       </footer>
 
       {showTop && (
         <button
           type="button"
           className="back-to-top"
-          onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+          onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
           aria-label="Back to top"
         >
           ↑
         </button>
       )}
 
-      <ProjectModal project={selectedProject} onClose={() => setSelectedProject(null)} />
+      <ProjectModal
+        project={selectedProject}
+        onClose={() => setSelectedProject(null)}
+      />
+
       <NoteModal note={selectedNote} onClose={() => setSelectedNote(null)} />
 
       <div ref={ringRef} className="cursor-ring" aria-hidden="true" />

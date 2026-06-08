@@ -1,62 +1,97 @@
-import { motion } from 'framer-motion';
-import { ExternalLink, Code, ArrowUpRight } from 'lucide-react';
+import { motion } from "framer-motion";
+import { ArrowUpRight, Code, ExternalLink } from "lucide-react";
 
-export default function ProjectCard({ title, description, tags, image, category, live, code, onDetails }) {
+export default function ProjectCard({
+  title,
+  description,
+  tags,
+  stack,
+  image,
+  category,
+  type,
+  live,
+  code,
+  links,
+  featured,
+  status,
+  year,
+  onDetails,
+}) {
+  const projectTags = tags || stack || [];
+  const liveLink = live || links?.live;
+  const codeLink = code || links?.github;
+
   return (
-    <motion.div
-      whileHover={{ y: -10 }}
-      whileTap={{ scale: 0.98 }}
-      className="glass relative overflow-hidden group border-white/5 hover:border-brand/30 transition-colors"
+    <motion.article
+      whileHover={{ y: -8 }}
+      transition={{ duration: 0.28, ease: "easeOut" }}
+      className={`project-card ${featured ? "project-card-featured" : ""}`}
     >
-      <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity card-glow" />
-      <div className="h-52 bg-white/5 relative overflow-hidden">
+      <div className="project-card-media">
         {image ? (
-          <img src={image} alt={title} className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" loading="lazy" />
+          <img
+            src={image}
+            alt={title}
+            className="project-card-image"
+            loading="lazy"
+          />
         ) : (
-          <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-white/5 to-white/10">
-            <div className="w-20 h-20 border-2 border-dashed border-white/20 rounded-full animate-spin-slow" />
+          <div className="project-card-placeholder">
+            <span>{category || "Project"}</span>
           </div>
         )}
-        <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity">
-          <div className="absolute inset-0 bg-brand/20" />
-          <div className="scanline" aria-hidden="true" />
-          <div className="relative h-full flex items-center justify-center gap-4">
+
+        <div className="project-card-actions" aria-label={`${title} links`}>
+          {codeLink && (
             <a
-              href={code}
+              href={codeLink}
               target="_blank"
               rel="noreferrer"
-              className="p-3 bg-bg-dark rounded-full hover:scale-110 transition-transform"
-              aria-label="View code"
+              className="project-icon-link"
+              aria-label={`View ${title} source code`}
             >
-              <Code size={20} />
+              <Code size={18} />
             </a>
+          )}
+
+          {liveLink && (
             <a
-              href={live}
+              href={liveLink}
               target="_blank"
               rel="noreferrer"
-              className="p-3 bg-bg-dark rounded-full hover:scale-110 transition-transform"
-              aria-label="View live demo"
+              className="project-icon-link"
+              aria-label={`View ${title} live website`}
             >
-              <ExternalLink size={20} />
+              <ExternalLink size={18} />
             </a>
-          </div>
+          )}
         </div>
       </div>
-      <div className="p-6 relative">
-        <div className="text-xs font-mono text-white/40 tracking-[0.3em] mb-3">{category}</div>
-        <h3 className="text-xl font-bold mb-2 group-hover:text-brand transition-colors">{title}</h3>
-        <p className="text-white/65 text-sm mb-4">{description}</p>
-        <div className="flex flex-wrap gap-2 mb-4">
-          {tags.map((tag) => (
-            <span key={tag} className="text-[10px] font-mono px-2 py-1 bg-white/5 rounded border border-white/10 uppercase tracking-widest text-white/40">
-              {tag}
-            </span>
+
+      <div className="project-card-body">
+        <div className="project-card-meta">
+          <span>{category || type || "Project"}</span>
+          {year && <span>{year}</span>}
+        </div>
+
+        <div className="project-card-title-row">
+          <h3>{title}</h3>
+          {status && <span className="project-status">{status}</span>}
+        </div>
+
+        <p>{description}</p>
+
+        <div className="project-tags">
+          {projectTags.map((tag) => (
+            <span key={tag}>{tag}</span>
           ))}
         </div>
-        <button onClick={onDetails} className="text-sm font-semibold text-brand inline-flex items-center gap-2">
-          View case study <ArrowUpRight size={16} />
+
+        <button type="button" onClick={onDetails} className="project-details-btn">
+          View case study
+          <ArrowUpRight size={16} />
         </button>
       </div>
-    </motion.div>
+    </motion.article>
   );
 }
