@@ -1,96 +1,103 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import Navbar from "./components/Navbar";
-import Hero from "./components/Hero";
-import Section from "./components/Section";
-import ProjectCard from "./components/ProjectCard";
-import ProjectModal from "./components/ProjectModal";
-import NoteCard from "./components/NoteCard";
-import NoteModal from "./components/NoteModal";
+import {
+  ArrowUpRight,
+  Briefcase,
+  Code2,
+  Mail,
+  Menu,
+  Shield,
+  Sword,
+  X,
+} from "lucide-react";
+import { motion } from "framer-motion";
+
 import ContactForm from "./components/ContactForm";
+import VideoBackground from "./components/VideoBackground";
+import { useWarScrollAnimations } from "./hooks/useWarScrollAnimations";
 
 import {
-  noteCategories,
-  notes,
   profile,
-  projectFilters,
   projects,
   services,
+  socials,
+  stats,
   techStack,
   timeline,
-  values,
+  notes,
 } from "./data/siteData";
 
+import { media } from "./data/media";
+
+const navLinks = [
+  { label: "Story", href: "#story" },
+  { label: "Missions", href: "#missions" },
+  { label: "War Room", href: "#war-room" },
+  { label: "Arsenal", href: "#arsenal" },
+  { label: "Contact", href: "#contact" },
+];
+
 function App() {
-  const cursorRef = useRef(null);
-  const ringRef = useRef(null);
-
-  const [projectFilter, setProjectFilter] = useState("All");
-  const [projectSearch, setProjectSearch] = useState("");
-  const [noteFilter, setNoteFilter] = useState("All");
-  const [noteSearch, setNoteSearch] = useState("");
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [selectedProject, setSelectedProject] = useState(null);
-  const [selectedNote, setSelectedNote] = useState(null);
-  const [showTop, setShowTop] = useState(false);
-  const [theme, setTheme] = useState(() => {
-    return localStorage.getItem("portfolio-theme") || "dark";
-  });
+
+  const cursorDotRef = useRef(null);
+  const cursorRingRef = useRef(null);
+
+  useWarScrollAnimations();
+
+  const featuredProjects = useMemo(() => projects.slice(0, 7), []);
 
   useEffect(() => {
-    document.documentElement.setAttribute("data-theme", theme);
-    document.documentElement.classList.toggle("dark", theme === "dark");
-    localStorage.setItem("portfolio-theme", theme);
-  }, [theme]);
+    document.documentElement.setAttribute("data-theme", "dark");
+  }, []);
 
   useEffect(() => {
-    let rafId = 0;
-    let targetX = window.innerWidth / 2;
-    let targetY = window.innerHeight / 2;
-    let currentX = targetX;
-    let currentY = targetY;
-
     const isTouchDevice =
       "ontouchstart" in window || navigator.maxTouchPoints > 0;
 
     if (isTouchDevice) return undefined;
 
+    let rafId = 0;
+    let targetX = window.innerWidth / 2;
+    let targetY = window.innerHeight / 2;
+    let dotX = targetX;
+    let dotY = targetY;
+    let ringX = targetX;
+    let ringY = targetY;
+
     const handleMove = (event) => {
       targetX = event.clientX;
       targetY = event.clientY;
 
-      const dx = targetX - window.innerWidth / 2;
-      const dy = targetY - window.innerHeight / 2;
-
-      document.documentElement.style.setProperty("--cursor-x", `${targetX}px`);
-      document.documentElement.style.setProperty("--cursor-y", `${targetY}px`);
-      document.documentElement.style.setProperty("--cursor-dx", `${dx}px`);
-      document.documentElement.style.setProperty("--cursor-dy", `${dy}px`);
-
-      if (cursorRef.current) cursorRef.current.style.opacity = "1";
-      if (ringRef.current) ringRef.current.style.opacity = "1";
+      if (cursorDotRef.current) cursorDotRef.current.style.opacity = "1";
+      if (cursorRingRef.current) cursorRingRef.current.style.opacity = "1";
     };
 
     const handleLeave = () => {
-      if (cursorRef.current) cursorRef.current.style.opacity = "0";
-      if (ringRef.current) ringRef.current.style.opacity = "0";
+      if (cursorDotRef.current) cursorDotRef.current.style.opacity = "0";
+      if (cursorRingRef.current) cursorRingRef.current.style.opacity = "0";
     };
 
     const animate = () => {
-      currentX += (targetX - currentX) * 0.12;
-      currentY += (targetY - currentY) * 0.12;
+      dotX += (targetX - dotX) * 0.35;
+      dotY += (targetY - dotY) * 0.35;
 
-      if (cursorRef.current) {
-        cursorRef.current.style.transform = `translate3d(${currentX - 12}px, ${
-          currentY - 12
+      ringX += (targetX - ringX) * 0.12;
+      ringY += (targetY - ringY) * 0.12;
+
+      if (cursorDotRef.current) {
+        cursorDotRef.current.style.transform = `translate3d(${dotX - 4}px, ${
+          dotY - 4
         }px, 0)`;
       }
 
-      if (ringRef.current) {
-        ringRef.current.style.transform = `translate3d(${currentX - 28}px, ${
-          currentY - 28
+      if (cursorRingRef.current) {
+        cursorRingRef.current.style.transform = `translate3d(${ringX - 22}px, ${
+          ringY - 22
         }px, 0)`;
       }
 
-      rafId = window.requestAnimationFrame(animate);
+      rafId = requestAnimationFrame(animate);
     };
 
     animate();
@@ -100,395 +107,376 @@ function App() {
     window.addEventListener("blur", handleLeave);
 
     return () => {
-      window.cancelAnimationFrame(rafId);
+      cancelAnimationFrame(rafId);
       window.removeEventListener("mousemove", handleMove);
       window.removeEventListener("mouseleave", handleLeave);
       window.removeEventListener("blur", handleLeave);
     };
   }, []);
 
-  useEffect(() => {
-    const onScroll = () => {
-      setShowTop(window.scrollY > 600);
-    };
-
-    onScroll();
-
-    window.addEventListener("scroll", onScroll, { passive: true });
-
-    return () => {
-      window.removeEventListener("scroll", onScroll);
-    };
-  }, []);
-
-  const filteredProjects = useMemo(() => {
-    return projects.filter((project) => {
-      const projectTags = project.tags || project.stack || [];
-
-      const searchableText = [
-        project.title,
-        project.description,
-        project.category,
-        project.type,
-        ...projectTags,
-      ]
-        .filter(Boolean)
-        .join(" ")
-        .toLowerCase();
-
-      const matchesSearch = searchableText.includes(
-        projectSearch.trim().toLowerCase()
-      );
-
-      const matchesFilter =
-        projectFilter === "All" ||
-        project.category === projectFilter ||
-        project.type === projectFilter ||
-        projectTags.some(
-          (tag) => tag.toLowerCase() === projectFilter.toLowerCase()
-        );
-
-      return matchesSearch && matchesFilter;
-    });
-  }, [projectFilter, projectSearch]);
-
-  const filteredNotes = useMemo(() => {
-    return notes.filter((note) => {
-      const noteTags = note.tags || [];
-
-      const searchableText = [
-        note.title,
-        note.description,
-        note.category,
-        note.tag,
-        ...noteTags,
-      ]
-        .filter(Boolean)
-        .join(" ")
-        .toLowerCase();
-
-      const matchesSearch = searchableText.includes(
-        noteSearch.trim().toLowerCase()
-      );
-
-      const matchesFilter =
-        noteFilter === "All" ||
-        note.category === noteFilter ||
-        note.tag === noteFilter;
-
-      return matchesSearch && matchesFilter;
-    });
-  }, [noteFilter, noteSearch]);
-
-  const toggleTheme = () => {
-    setTheme((currentTheme) => (currentTheme === "dark" ? "light" : "dark"));
-  };
-
   return (
-    <div className="bg-bg-dark text-white font-sans selection:bg-brand selection:text-bg-dark relative">
-      <Navbar />
+    <div className="cinema-shell">
+      <div className="grain-layer" />
+      <div className="grid-layer" />
 
-      <button
-        type="button"
-        onClick={toggleTheme}
-        className="fixed right-6 top-24 z-50 rounded-full border border-white/10 bg-white/10 px-4 py-2 text-xs font-bold uppercase tracking-[0.2em] text-white backdrop-blur"
-      >
-        {theme === "dark" ? "Light" : "Dark"}
-      </button>
+      <div className="giant-word">Warrior</div>
+
+      <header className="scene-nav">
+        <a href="#" className="brand-mark" onClick={() => setIsMenuOpen(false)}>
+          Igiehon Gideon
+        </a>
+
+        <nav className="desktop-nav">
+          {navLinks.map((link) => (
+            <a key={link.href} href={link.href}>
+              {link.label}
+            </a>
+          ))}
+        </nav>
+
+        <div className="nav-actions">
+          <a href="#contact" className="nav-cta">
+            Start Mission
+            <ArrowUpRight size={15} />
+          </a>
+
+          <button
+            type="button"
+            className="menu-btn"
+            onClick={() => setIsMenuOpen((current) => !current)}
+            aria-label="Toggle menu"
+          >
+            {isMenuOpen ? <X size={18} /> : <Menu size={18} />}
+          </button>
+        </div>
+
+        {isMenuOpen && (
+          <div className="mobile-menu">
+            {navLinks.map((link) => (
+              <a
+                key={link.href}
+                href={link.href}
+                onClick={() => setIsMenuOpen(false)}
+              >
+                {link.label}
+                <ArrowUpRight size={14} />
+              </a>
+            ))}
+          </div>
+        )}
+      </header>
 
       <main>
-        <Hero />
-
-        <Section
-          id="projects"
-          title="Projects"
-          kicker="Portfolio"
-          subtitle="Search and filter selected work across web apps, landing pages, e-commerce, and UI/UX concepts."
-        >
-          <div className="flex flex-wrap gap-3 mb-6">
-            {projectFilters.map((filter) => (
-              <button
-                key={filter}
-                onClick={() => setProjectFilter(filter)}
-                className={`chip ${projectFilter === filter ? "chip-active" : ""}`}
-              >
-                {filter}
-              </button>
-            ))}
-          </div>
-
-          <div className="flex flex-col md:flex-row gap-4 mb-10">
-            <input
-              value={projectSearch}
-              onChange={(event) => setProjectSearch(event.target.value)}
-              placeholder="Search projects"
-              className="form-input flex-1"
+        <section className="hero-scene">
+          <div className="hero-video-wrap">
+            <VideoBackground
+              src={media.videos.heroBattlefieldLoop}
+              className="hero-video"
             />
-
-            <div className="glass px-5 py-3 text-sm text-white/60">
-              {filteredProjects.length} projects
-            </div>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {filteredProjects.map((project) => (
-              <ProjectCard
-                key={project.id}
-                {...project}
-                onDetails={() => setSelectedProject(project)}
-              />
-            ))}
-          </div>
-        </Section>
+          <VideoBackground
+            src={media.videos.heroParticlesOverlay}
+            className="particle-video"
+            overlay={false}
+            opacity={0.68}
+          />
 
-        <Section
-          id="about"
-          title="About Gideon"
-          kicker="Origin"
-          subtitle="Igiehon Gideon Aisosa is a full-stack web developer focused on building polished interfaces, scalable systems, and professional digital products."
-        >
-          <div className="grid lg:grid-cols-[1.1fr_0.9fr] gap-10">
-            <div className="space-y-6 text-white/70">
-              <p>
-                Gideon builds responsive websites, full-stack applications,
-                landing pages, e-commerce systems, and product interfaces using
-                tools like React, Next.js, Node.js, Express, PostgreSQL, and
-                modern frontend animation systems.
-              </p>
+          <div className="hero-vignette" />
 
-              <p>
-                His work is focused on clean UI, strong performance, thoughtful
-                user experience, and digital products that help brands,
-                startups, creators, and businesses look more professional
-                online.
-              </p>
-
-              <div className="grid gap-4">
-                {timeline.map((item) => (
-                  <div key={item.title} className="glass p-4">
-                    <div className="text-xs font-mono text-white/40 tracking-[0.3em] mb-2">
-                      {item.year}
-                    </div>
-                    <div className="text-lg font-semibold text-white">
-                      {item.title}
-                    </div>
-                    <p className="text-sm text-white/60 mt-2">
-                      {item.description}
-                    </p>
-                  </div>
-                ))}
-              </div>
+          <div className="hero-content">
+            <div className="hero-kicker">
+              <span>Full-stack Developer</span>
+              <span>Battle-tested systems</span>
             </div>
 
-            <div className="space-y-6">
-              <div className="hero-panel p-6">
-                <div className="text-xs font-mono text-white/40 tracking-[0.3em] mb-2">
-                  Profile
-                </div>
-                <div className="text-2xl font-bold mb-2">
-                  {profile.publicName || profile.fullName}
-                </div>
-                <p className="text-white/70">
-                  Full-stack web developer building modern websites, dashboards,
-                  apps, and e-commerce platforms.
-                </p>
-              </div>
+            <h1>
+              <span className="hero-title-line">Built through pressure.</span>
+              <span className="hero-title-line italic-line">
+                Sharpened by code.
+              </span>
+            </h1>
 
-              <div className="glass p-6">
-                <div className="text-xs font-mono text-white/40 tracking-[0.3em] mb-3">
-                  Values
-                </div>
-                <div className="flex flex-wrap gap-2">
-                  {values.map((value) => (
-                    <span key={value} className="badge">
-                      {value}
-                    </span>
-                  ))}
-                </div>
-              </div>
+            <p className="hero-copy">
+              I’m Gideon — a developer building polished interfaces, scalable
+              backend systems, e-commerce flows, dashboards, and cinematic web
+              experiences for serious brands.
+            </p>
 
-              <div className="glass p-6">
-                <div className="text-xs font-mono text-white/40 tracking-[0.3em] mb-2">
-                  Focus
-                </div>
-                <p className="text-white/70">
-                  React, Next.js, Node.js, Express, PostgreSQL, UI engineering,
-                  landing pages, e-commerce, and product-focused frontend
-                  development.
-                </p>
-              </div>
+            <div className="hero-actions">
+              <a href="#missions" className="primary-btn">
+                View Missions
+                <ArrowUpRight size={17} />
+              </a>
+
+              <a href="#story" className="secondary-btn">
+                See the Journey
+                <Sword size={16} />
+              </a>
             </div>
-          </div>
-        </Section>
 
-        <Section
-          id="services"
-          title="Services"
-          kicker="Client Work"
-          subtitle="Conversion-focused services designed for brands, businesses, and startups."
-        >
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {services.map((service) => (
-              <div
-                key={service.title}
-                className="glass p-6 hover:border-brand/30 transition-colors"
-              >
-                <h3 className="text-xl font-bold mb-3">{service.title}</h3>
-
-                {service.description && (
-                  <p className="text-sm text-white/70 mb-4">
-                    {service.description}
-                  </p>
-                )}
-
-                {service.audience && (
-                  <p className="text-sm text-white/70 mb-4">
-                    For: {service.audience}
-                  </p>
-                )}
-
-                {service.outcome && (
-                  <p className="text-sm text-white/60">
-                    You get: {service.outcome}
-                  </p>
-                )}
-
-                <a href="#contact" className="mt-6 inline-flex text-brand font-semibold">
-                  Request this service
+            <div className="hero-socials">
+              {socials.map((social) => (
+                <a
+                  key={social.label}
+                  href={social.href}
+                  target="_blank"
+                  rel="noreferrer"
+                >
+                  {social.label}
                 </a>
-              </div>
-            ))}
-          </div>
-        </Section>
-
-        <Section
-          id="tech"
-          title="Tech Stack"
-          kicker="Capabilities"
-          subtitle="Modern tooling across frontend, backend, mobile, and deployment."
-        >
-          <div className="grid md:grid-cols-2 gap-6">
-            {techStack.map((group) => (
-              <div key={group.group} className="glass p-6">
-                <div className="text-xs font-mono text-white/40 tracking-[0.3em] mb-3">
-                  {group.group}
-                </div>
-
-                <div className="flex flex-wrap gap-2">
-                  {group.items.map((item) => (
-                    <span key={item} className="badge" title={item}>
-                      {item}
-                    </span>
-                  ))}
-                </div>
-              </div>
-            ))}
-          </div>
-        </Section>
-
-        <Section
-          id="notes"
-          title="Notes & Blog"
-          kicker="Insights"
-          subtitle="Developer notes, learning journey, and guides for businesses and student developers."
-        >
-          <div className="flex flex-wrap gap-3 mb-6">
-            {noteCategories.map((category) => (
-              <button
-                key={category}
-                onClick={() => setNoteFilter(category)}
-                className={`chip ${noteFilter === category ? "chip-active" : ""}`}
-              >
-                {category}
-              </button>
-            ))}
-          </div>
-
-          <div className="flex flex-col md:flex-row gap-4 mb-10">
-            <input
-              value={noteSearch}
-              onChange={(event) => setNoteSearch(event.target.value)}
-              placeholder="Search notes"
-              className="form-input flex-1"
-            />
-
-            <div className="glass px-5 py-3 text-sm text-white/60">
-              {filteredNotes.length} notes
+              ))}
             </div>
           </div>
 
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {filteredNotes.map((note) => (
-              <NoteCard
-                key={note.id}
-                note={note}
-                onOpen={() => setSelectedNote(note)}
-              />
+          <div className="status-panel">
+            <div className="status-top">
+              <span>Warrior Status</span>
+              <Shield size={15} />
+            </div>
+
+           <div className="profile-cutout-slot">
+  <img
+    src="/assets/my-profile.webp"
+    alt="Igiehon Gideon"
+    className="profile-cutout-img"
+  />
+</div>
+
+            <div className="status-tags">
+              <span>React</span>
+              <span>Next.js</span>
+              <span>Node.js</span>
+              <span>PostgreSQL</span>
+            </div>
+          </div>
+        </section>
+
+        <section id="story" className="scene story-scene video-scene">
+          <VideoBackground
+            src={media.videos.journeyLoop}
+            className="scene-video-layer"
+            opacity={0.44}
+          />
+
+          <div className="scene-inner">
+            <div className="scene-label">Origin Story</div>
+
+            <h2 className="scene-title">
+              The battlefield that shaped the builder.
+            </h2>
+
+            <p className="scene-text">
+              This portfolio is not just a showcase. It is a story of learning,
+              failing, rebuilding, sharpening skill, and becoming capable enough
+              to ship real digital products.
+            </p>
+
+            <div className="story-grid">
+              {timeline.map((item, index) => (
+                <article className="reveal-card story-card" key={item.title}>
+                  <span>0{index + 1}</span>
+                  <small>{item.year}</small>
+                  <h3>{item.title}</h3>
+                  <p>{item.description}</p>
+                </article>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        <section id="missions" className="scene missions-scene video-scene">
+          <VideoBackground
+            src={media.videos.projectsBattleTestedLoop}
+            className="scene-video-layer"
+            opacity={0.5}
+          />
+
+          <div className="mission-head">
+            <div>
+              <div className="scene-label">Completed Missions</div>
+              <h2 className="scene-title">Projects built under pressure.</h2>
+            </div>
+
+            <p className="scene-text">
+              Each mission represents a product problem solved with design,
+              code, structure, and execution.
+            </p>
+          </div>
+
+          <div className="mission-track">
+            {featuredProjects.map((project, index) => (
+              <article
+                className="mission-card reveal-card"
+                key={project.id || project.title}
+                onClick={() => setSelectedProject(project)}
+              >
+                <div className="mission-number">
+                  {String(index + 1).padStart(2, "0")}
+                </div>
+
+                <div className="mission-image">
+                  <img src={project.image} alt={project.title} />
+                </div>
+
+                <div className="mission-body">
+                  <span>{project.category}</span>
+                  <h3>{project.title}</h3>
+                  <p>{project.description}</p>
+
+                  <div className="tag-row">
+                    {(project.tags || project.stack || [])
+                      .slice(0, 4)
+                      .map((tag) => (
+                        <small key={tag}>{tag}</small>
+                      ))}
+                  </div>
+                </div>
+              </article>
             ))}
           </div>
-        </Section>
+        </section>
 
-        <Section
-          id="contact"
-          title="Contact"
-          kicker="Get in touch"
-          subtitle="Tell Gideon about your project, timeline, and budget."
-        >
-          <div className="grid lg:grid-cols-[1fr_0.8fr] gap-10">
-            <div className="hero-panel p-6">
-              <h3 className="text-2xl font-bold mb-4">
-                Let&apos;s build something powerful.
-              </h3>
+        <section id="war-room" className="scene war-room-scene video-scene">
+          <VideoBackground
+            src={media.videos.warRoomSkillsLoop}
+            className="scene-video-layer"
+            opacity={0.52}
+          />
 
-              <p className="text-white/70 mb-6">
-                {profile.publicName || profile.fullName} is open to freelance
-                work, internships, remote roles, and collaborations.
+          <div className="scene-inner split-scene">
+            <div>
+              <div className="scene-label">War Room</div>
+              <h2 className="scene-title">Strategy before execution.</h2>
+              <p className="scene-text">
+                I don’t just build screens. I think through flow, performance,
+                backend structure, payment, admin logic, and how the product
+                will survive real users.
+              </p>
+            </div>
+
+            <div className="service-grid">
+              {services.slice(0, 6).map((service, index) => (
+                <article className="reveal-card service-card" key={service.title}>
+                  <span>0{index + 1}</span>
+                  <h3>{service.title}</h3>
+                  <p>{service.description}</p>
+                </article>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        <section id="arsenal" className="scene arsenal-scene">
+          <div className="scene-inner">
+            <div className="scene-label">Arsenal</div>
+            <h2 className="scene-title">The stack I fight with.</h2>
+
+            <div className="arsenal-grid">
+              {techStack.map((group) => (
+                <article className="reveal-card arsenal-card" key={group.group}>
+                  <Code2 size={22} />
+                  <h3>{group.group}</h3>
+
+                  <div className="tag-row">
+                    {group.items.map((item) => (
+                      <small key={item}>{item}</small>
+                    ))}
+                  </div>
+                </article>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        <section className="scene notes-scene">
+          <div className="scene-inner">
+            <div className="scene-label">Field Notes</div>
+            <h2 className="scene-title">Lessons from the build floor.</h2>
+
+            <div className="notes-grid">
+              {notes.slice(0, 3).map((note) => (
+                <article className="reveal-card note-card" key={note.id}>
+                  <span>{note.tag || note.category}</span>
+                  <h3>{note.title}</h3>
+                  <p>{note.excerpt || note.description}</p>
+                </article>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        <section id="contact" className="scene contact-scene">
+          <div className="contact-panel">
+            <div>
+              <div className="scene-label">Final Call</div>
+              <h2 className="scene-title">Ready for the next mission?</h2>
+
+              <p className="scene-text">
+                Send the idea, timeline, and goal. I’ll help you turn it into a
+                clean, serious, functional digital product.
               </p>
 
-              <div className="space-y-3 text-sm text-white/60">
-                <div>Location: {profile.location}</div>
-                <div>Email: {profile.email}</div>
-                <div>Brand: {profile.handle}</div>
+              <div className="contact-links">
+                <a href={`mailto:${profile.email}`}>
+                  <Mail size={16} />
+                  {profile.email}
+                </a>
+
+                <span>
+                  <Briefcase size={16} />
+                  Freelance · Internship · Remote roles
+                </span>
               </div>
             </div>
 
-            <div className="glass p-6">
-              <ContactForm />
-            </div>
+            <ContactForm />
           </div>
-        </Section>
+        </section>
       </main>
 
-      <footer className="py-12 border-t border-white/5 text-center text-white/40 font-mono text-xs">
-        <p>
-          © 2026 {profile.fullName} · Warrior Tech · Built for premium web
-          experiences.
-        </p>
+      <footer className="footer">
+        © 2026 {profile.fullName}. Built with React, GSAP, Motion, and
+        discipline.
       </footer>
 
-      {showTop && (
-        <button
-          type="button"
-          className="back-to-top"
-          onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
-          aria-label="Back to top"
-        >
-          ↑
-        </button>
+      {selectedProject && (
+        <div className="modal-backdrop" onClick={() => setSelectedProject(null)}>
+          <motion.div
+            className="project-modal"
+            onClick={(event) => event.stopPropagation()}
+            initial={{ opacity: 0, y: 30, scale: 0.96 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+          >
+            <button
+              type="button"
+              className="modal-close"
+              onClick={() => setSelectedProject(null)}
+            >
+              <X size={18} />
+            </button>
+
+            <span>{selectedProject.category}</span>
+            <h2>{selectedProject.title}</h2>
+            <p>{selectedProject.longDescription || selectedProject.overview}</p>
+
+            <div className="modal-grid">
+              <div>
+                <strong>Problem</strong>
+                <p>{selectedProject.problem || "Project challenge and goal."}</p>
+              </div>
+
+              <div>
+                <strong>Outcome</strong>
+                <p>{selectedProject.outcome || "A polished digital result."}</p>
+              </div>
+            </div>
+          </motion.div>
+        </div>
       )}
 
-      <ProjectModal
-        project={selectedProject}
-        onClose={() => setSelectedProject(null)}
-      />
-
-      <NoteModal note={selectedNote} onClose={() => setSelectedNote(null)} />
-
-      <div ref={ringRef} className="cursor-ring" aria-hidden="true" />
-      <div ref={cursorRef} className="cursor-orb" aria-hidden="true" />
-      <div className="fixed inset-0 -z-50 bg-aurora pointer-events-none" />
-      <div className="fixed inset-0 -z-40 grid-overlay pointer-events-none" />
-      <div className="fixed inset-0 -z-30 noise-layer pointer-events-none" />
+      <div ref={cursorDotRef} className="cursor-dot" aria-hidden="true" />
+      <div ref={cursorRingRef} className="cursor-ring" aria-hidden="true" />
     </div>
   );
 }

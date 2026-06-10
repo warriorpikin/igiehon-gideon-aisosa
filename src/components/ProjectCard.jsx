@@ -1,97 +1,110 @@
 import { motion } from "framer-motion";
-import { ArrowUpRight, Code, ExternalLink } from "lucide-react";
+import { ExternalLink, Code, ArrowUpRight } from "lucide-react";
 
 export default function ProjectCard({
   title,
   description,
-  tags,
-  stack,
+  tags = [],
+  stack = [],
   image,
   category,
-  type,
   live,
   code,
   links,
-  featured,
-  status,
-  year,
   onDetails,
 }) {
-  const projectTags = tags || stack || [];
+  const projectTags = tags.length ? tags : stack;
   const liveLink = live || links?.live;
   const codeLink = code || links?.github;
 
   return (
-    <motion.article
-      whileHover={{ y: -8 }}
-      transition={{ duration: 0.28, ease: "easeOut" }}
-      className={`project-card ${featured ? "project-card-featured" : ""}`}
+    <motion.div
+      whileHover={{ y: -10 }}
+      whileTap={{ scale: 0.98 }}
+      className="glass relative overflow-hidden group border-white/5 hover:border-brand/30 transition-colors"
     >
-      <div className="project-card-media">
+      <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity card-glow" />
+
+      <div className="h-52 bg-white/5 relative overflow-hidden">
         {image ? (
           <img
             src={image}
             alt={title}
-            className="project-card-image"
+            className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
             loading="lazy"
           />
         ) : (
-          <div className="project-card-placeholder">
-            <span>{category || "Project"}</span>
+          <div className="w-full h-full flex items-center justify-center bg-white/5">
+            <div className="text-xs font-mono text-white/30 tracking-[0.3em] uppercase">
+              {category || "Project"}
+            </div>
           </div>
         )}
 
-        <div className="project-card-actions" aria-label={`${title} links`}>
-          {codeLink && (
-            <a
-              href={codeLink}
-              target="_blank"
-              rel="noreferrer"
-              className="project-icon-link"
-              aria-label={`View ${title} source code`}
-            >
-              <Code size={18} />
-            </a>
-          )}
+        {(codeLink || liveLink) && (
+          <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity">
+            <div className="absolute inset-0 bg-brand/20" />
+            <div className="scanline" aria-hidden="true" />
 
-          {liveLink && (
-            <a
-              href={liveLink}
-              target="_blank"
-              rel="noreferrer"
-              className="project-icon-link"
-              aria-label={`View ${title} live website`}
-            >
-              <ExternalLink size={18} />
-            </a>
-          )}
-        </div>
+            <div className="relative h-full flex items-center justify-center gap-4">
+              {codeLink && (
+                <a
+                  href={codeLink}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="p-3 bg-bg-dark rounded-full hover:scale-110 transition-transform"
+                  aria-label="View code"
+                >
+                  <Code size={20} />
+                </a>
+              )}
+
+              {liveLink && (
+                <a
+                  href={liveLink}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="p-3 bg-bg-dark rounded-full hover:scale-110 transition-transform"
+                  aria-label="View live demo"
+                >
+                  <ExternalLink size={20} />
+                </a>
+              )}
+            </div>
+          </div>
+        )}
       </div>
 
-      <div className="project-card-body">
-        <div className="project-card-meta">
-          <span>{category || type || "Project"}</span>
-          {year && <span>{year}</span>}
+      <div className="p-6 relative">
+        <div className="text-xs font-mono text-white/40 tracking-[0.3em] mb-3 uppercase">
+          {category || "Project"}
         </div>
 
-        <div className="project-card-title-row">
-          <h3>{title}</h3>
-          {status && <span className="project-status">{status}</span>}
-        </div>
+        <h3 className="text-xl font-bold mb-2 group-hover:text-brand transition-colors">
+          {title}
+        </h3>
 
-        <p>{description}</p>
+        <p className="text-white/65 text-sm mb-4">{description}</p>
 
-        <div className="project-tags">
+        <div className="flex flex-wrap gap-2 mb-4">
           {projectTags.map((tag) => (
-            <span key={tag}>{tag}</span>
+            <span
+              key={tag}
+              className="text-[10px] font-mono px-2 py-1 bg-white/5 rounded border border-white/10 uppercase tracking-widest text-white/40"
+            >
+              {tag}
+            </span>
           ))}
         </div>
 
-        <button type="button" onClick={onDetails} className="project-details-btn">
-          View case study
-          <ArrowUpRight size={16} />
+        <button
+          type="button"
+          onClick={onDetails}
+          className="text-sm font-semibold text-brand inline-flex items-center gap-2"
+        >
+          View case study <ArrowUpRight size={16} />
         </button>
       </div>
-    </motion.article>
+    </motion.div>
   );
 }
